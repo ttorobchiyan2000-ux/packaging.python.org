@@ -1,63 +1,120 @@
-.. _installing-packages:
+pip install python-telegram-bot.TOKEN = 8492059426:AAGsEVwGmdlini3cEy_M7sFhS1yAwjk7XJo
+CHANNEL_ID = "@YourChannelUsername"
+ADMIN_ID = 123456789  # شناسه عددی تلگرام خودت. _installing-packages:from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, MessageHandler, filters, CallbackQueryHandler, ContextTypes
+
+pending_media = {}
+
+async def handle_media(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    message = update.message
+
+    if message.photo:
+        file_id = message.photo[-1].file_id
+        media_type = 'photo'
+    elif message.video:
+        file_id = message.video.file_id
+        media_type = 'video'
+    else:
+        return
+
+    media_id = f"{user.id}_{message.message_id}"
+    pending_media[media_id] = {'file_id': file_id, 'type': media_type}
+
+    keyboard = [
+        [InlineKeyboardButton("✅ تأیید", callback_data=f"approve_{media_id}"),
+         InlineKeyboardButton("❌ رد", callback_data=f"reject_{media_id}")]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await context.bot.send_message(chat_id=ADMIN_ID, text="محتوای جدید برای بررسی:", reply_markup=reply_markup)
+
+async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    action, media_id = query.data.split('_', 1)
+    media = pending_media.get(media_id)
+
+    if not media:
+        await query.edit_message_text("محتوا پیدا نشد یا قبلاً بررسی شده.")
+        return
+
+    if action == "approve":
+        if media['type'] == 'photo':
+            await context.bot.send_photo(chat_id=CHANNEL_ID, photo=media['file_id'])
+        elif media['type'] == 'video':
+            await context.bot.send_video(chat_id=CHANNEL_ID, video=media['file_id'])
+        await query.edit_message_text("✅ ارسال شد به کانال.")
+    else:
+        await query.edit_message_text("❌ رد شد.")
+
+    del pending_media[media_id]
+
+برنامه = ApplicationBuilder().token (TOKEN).
+برنامه.add_handler (MessageHandler). PHOTO | فیلتر. VIDEO, handle_media))
+برنامه.add_handler (CallbackQueryHandler (handle_callback)
+
+برنامه.run_polling()
 
 ===================
-Installing Packages
+نصب بسته
 ===================
 
-This section covers the basics of how to install Python :term:`packages
-<Distribution Package>`.
+این بخش پایه های نحوه نصب پایتون را پوشش می دهد: بسته های
+<توزیع بسته>`.
 
-It's important to note that the term "package" in this context is being used to
-describe a bundle of software to be installed (i.e. as a synonym for a
-:term:`distribution <Distribution Package>`). It does not refer to the kind
-of :term:`package <Import Package>` that you import in your Python source code
-(i.e. a container of modules). It is common in the Python community to refer to
-a :term:`distribution <Distribution Package>` using the term "package".  Using
-the term "distribution" is often not preferred, because it can easily be
-confused with a Linux distribution, or another larger software distribution
-like Python itself.
+مهم است که توجه داشته باشیم که اصطلاح "بسته" در این زمینه مورد استفاده قرار می گیرد
+یک بسته نرم افزار را برای نصب (یعنی به عنوان یک مترجم برای یک
+: : توزیع <توزیع بسته <توزیع بسته>. به این نوع اشاره ندارد
+از: دوره: بسته <Import Pacge> که در کد منبع پایتون خود وارد می کنید
+(مثلاً یک ظرف ماژول ها). در جامعه پایتون به آن اشاره می کند
+یک: عبارت: توزیع <توزیع بسته <توزیع > با استفاده از اصطلاح "بسته". استفاده
+اصطلاح توزیع اغلب ترجیح نمی دهد، زیرا به راحتی می تواند باشد
+با یک توزیع لینوکس یا یک توزیع نرم افزار بزرگ تر
+مثل خود پایتون.
 
 
-.. _installing_requirements:
+_
 
-Requirements for Installing Packages
+نیاز به بسته های نصب
 ====================================
 
-This section describes the steps to follow before installing other Python
-packages.
+این بخش مراحل را برای دنبال کردن قبل از نصب پایتون دیگر توصیف می کند
+بسته ها.
 
 
-Ensure you can run Python from the command line
+مطمئن باشید که می توانید پایتون را از خط فرماندهی اداره کنید
 -----------------------------------------------
 
-Before you go any further, make sure you have Python and that the expected
-version is available from your command line. You can check this by running:
+قبل از اینکه جلوتر بروید، مطمئن شوید که پایتون دارید و انتظار
+نسخه از خط فرماندهی شما موجود است. می توانید این را با دویدن بررسی کنید:
 
-.. tab:: Unix/macOS
+. tab:: Unix/macOS
 
-    .. code-block:: bash
+ کد-بلوک: 
 
-        python3 --version
+ پیتون ۳ - نسخه 
 
-.. tab:: Windows
+تاب: پنجره
 
-    .. code-block:: bat
+          کد-بلوک: خفاش          
 
-        py --version
+ پی - نسخه 
 
 
-You should get some output like ``Python 3.6.3``. If you do not have Python,
-please install the latest 3.x version from `python.org`_ or refer to the
-:ref:`Installing Python <python-guide:installation>` section of the Hitchhiker's Guide to Python.
+شما باید مقداری خروجی مثل پایتون ۳٫۶٫۳ داشته باشید. اگر پایتون ندارید،
+لطفا آخرین نسخه 3.x را از `Python.org_ نصب کنید یا به آن اشاره کنید
+: ref:\`Installing Python-guide: installation> بخشی از راهنمای هیچکهیکر به پایتون.
 
-.. Note:: If you're a newcomer and you get an error like this:
+توجه کنید: اگر تازه وارد هستید و چنین اشتباه می کنید:
 
-    .. code-block:: pycon
+ کد-بلوک: pycon 
 
-        >>> python3 --version
-        Traceback (most recent call last):
-          File "<stdin>", line 1, in <module>
-        NameError: name 'python3' is not defined
+ >>> پیتون 3 --نسخه 
+  تریسی بک (آخرین تماس اخیر) :  
+ File "<stdin>", خط 1, in <module> 
+ نام نام: نام "Python3" تعریف نشده است 
 
     It's because this command and other suggested commands in this tutorial
     are intended to be run in a *shell* (also called a *terminal* or
@@ -616,7 +673,7 @@ and use the ``--extra-index-url`` flag to direct pip to use that index.
 .. code-block:: bash
 
    ./s3helper --port=7777
-   python -m pip install --extra-index-url http://localhost:7777 SomeProject
+توزیع (sdist) <منبع توزیع (یا "sdist")>`
 
 
 Installing Prereleases
@@ -651,7 +708,7 @@ you know publishes one, you can include it in the pip installation command:
 
         python3 -m pip install 'SomePackage[PDF]'
         python3 -m pip install 'SomePackage[PDF]==3.0'
-        python3 -m pip install -e '.[PDF]'  # editable project in current directory
+برای نصب آخرین نسخه "یک پروژه" :
 
 .. tab:: Windows
 
